@@ -1,0 +1,41 @@
+service: chee
+
+package:
+  include:
+    - lib/**
+    - data/**
+  exclude:
+    - README.md
+    - Makefile
+
+custom: ${file(./config.yml)}
+
+provider:
+  name: aws
+  memory: 128
+  runtime: nodejs6.10
+  timeout: 3
+  stage: dev
+  profile: serverless
+  environment:
+    SLACK_CLIENT_ID: ${self:custom.slack_client_id}
+    SLACK_CLIENT_SECRET: ${self:custom.slack_client_secret}
+    SLACK_VERIFICATION_TOKEN: ${self:custom.slack_verification_token}
+    MASHAPE_API_KEY: ${self:custom.mashape_api_key}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource:
+        - "arn:aws:s3:::${self:custom.bucket}/*"
+        - "arn:aws:s3:::${self:custom.bucket}"
+
+functions:
+  ccl:
+    handler: lib/ccl.get
+    name: ${self:provider.stage}-ccl
+    description: Too many ccliters gifs
+    events:
+        - http:
+            path: ccl
+            method: post

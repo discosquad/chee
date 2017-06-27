@@ -1,0 +1,16 @@
+{
+  "name": "chee",
+  "version": "1.0.0",
+  "description": "Chee is all-knowing",
+  "main": "handler.js",
+  "scripts": {},
+  "private": true,
+  "keywords": [
+    "serverless"
+  ],
+  "dependencies": {
+    "aws-sdk": "^2.75.0",
+    "lodash": "^4.17.4",
+    "unirest": "^0.5.1"
+  }
+}
