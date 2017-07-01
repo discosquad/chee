@@ -1,4 +1,6 @@
-service: chee
+service:
+  name: chee
+  awsKmsKeyArn: arn:aws:kms:us-east-1:710390882138:key/bbbc300d-ac65-4e10-a4d8-4ae43008ae13
 
 package:
   include:
@@ -7,8 +9,17 @@ package:
   exclude:
     - README.md
     - Makefile
+    - LICENSE
 
-custom: ${file(./config.yml)}
+custom:
+  creds: ${file(./config.yml)}
+  bucket: chee
+  dynamodb:
+    start:
+      inMemory: true
+      migrate: true
+  serverless-offline:
+    port: 4000
 
 provider:
   name: aws
@@ -18,10 +29,11 @@ provider:
   stage: dev
   profile: serverless
   environment:
-    SLACK_CLIENT_ID: ${self:custom.slack_client_id}
-    SLACK_CLIENT_SECRET: ${self:custom.slack_client_secret}
-    SLACK_VERIFICATION_TOKEN: ${self:custom.slack_verification_token}
-    MASHAPE_API_KEY: ${self:custom.mashape_api_key}
+    SLACK_CLIENT_ID: ${self:custom.creds.slack_client_id}
+    SLACK_CLIENT_SECRET: ${self:custom.creds.slack_client_secret}
+    SLACK_VERIFICATION_TOKEN: ${self:custom.creds.slack_verification_token}
+    MASHAPE_API_KEY: ${self:custom.creds.mashape_api_key}
+    DYNAMODB_TABLE: scores
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -29,13 +41,62 @@ provider:
       Resource:
         - "arn:aws:s3:::${self:custom.bucket}/*"
         - "arn:aws:s3:::${self:custom.bucket}"
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/*"
 
 functions:
   ccl:
-    handler: lib/ccl.get
+    handler: lib/ccl/get.do
     name: ${self:provider.stage}-ccl
     description: Too many ccliters gifs
     events:
         - http:
             path: ccl
             method: post
+  plus:
+    handler: lib/score/score.plus
+    name: ${self:provider.stage}-score-plus
+    description: ++ a thing
+    events:
+        - http:
+            path: score/plus
+            method: post
+  minus:
+    handler: lib/score/score.minus
+    name: ${self:provider.stage}-score-minus
+    description: -- a thing
+    events:
+        - http:
+            path: score/minus
+            method: post
+
+resources:
+  Resources:
+    scores:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: scores
+        AttributeDefinitions:
+          - AttributeName: user
+            AttributeType: S
+          - AttributeName: date
+            AttributeType: N
+        KeySchema:
+          - AttributeName: user
+            KeyType: HASH
+          - AttributeName: date
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline
