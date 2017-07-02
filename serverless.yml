@@ -33,7 +33,8 @@ provider:
     SLACK_CLIENT_SECRET: ${self:custom.creds.slack_client_secret}
     SLACK_VERIFICATION_TOKEN: ${self:custom.creds.slack_verification_token}
     MASHAPE_API_KEY: ${self:custom.creds.mashape_api_key}
-    DYNAMODB_TABLE: scores
+    DYNAMODB_USER_TABLE: users
+    DYNAMODB_SCORE_TABLE: scores
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -79,17 +80,30 @@ functions:
 
 resources:
   Resources:
+    users:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: users
+        AttributeDefinitions:
+          - AttributeName: name
+            AttributeType: S
+        KeySchema:
+          - AttributeName: name
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
     scores:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: scores
         AttributeDefinitions:
-          - AttributeName: user
+          - AttributeName: userId
             AttributeType: S
           - AttributeName: date
             AttributeType: N
         KeySchema:
-          - AttributeName: user
+          - AttributeName: userId
             KeyType: HASH
           - AttributeName: date
             KeyType: RANGE

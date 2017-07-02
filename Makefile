@@ -5,7 +5,7 @@ node_modules:
 	@npm install
 
 config.yml:
-	@echo -e "---\ndynamodb-table:$(DYNAMODB_TABLE)\nbucket:tds-slack\nslack_client_id:$(SLACK_CLIENT_ID)\nslack_verification_token:$(SLACK_VERIFICATION_TOKEN)\nslack_client_secret:$(SLACK_CLIENT_SECRET)\nmashape_api_key:$(MASHAPE_API_KEY)\n" > $@
+	@echo -e "---\nbucket:tds-slack\nslack_client_id:$(SLACK_CLIENT_ID)\nslack_verification_token:$(SLACK_VERIFICATION_TOKEN)\nslack_client_secret:$(SLACK_CLIENT_SECRET)\nmashape_api_key:$(MASHAPE_API_KEY)\n" > $@
 
 .PHONY: dev
 dev: node_modules config.yml
