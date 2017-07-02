@@ -6,6 +6,8 @@ package:
   include:
     - lib/**
     - data/**
+    - node_modules/serverless-dynamodb-local/**
+
   exclude:
     - README.md
     - Makefile
@@ -14,6 +16,7 @@ package:
 custom:
   creds: ${file(./config.yml)}
   bucket: chee
+  ccl_bucket: tds-slack
   dynamodb:
     start:
       inMemory: true
@@ -40,8 +43,8 @@ provider:
       Action:
         - s3:*
       Resource:
-        - "arn:aws:s3:::${self:custom.bucket}/*"
-        - "arn:aws:s3:::${self:custom.bucket}"
+        - "arn:aws:s3:::${self:custom.ccl_bucket}/*"
+        - "arn:aws:s3:::${self:custom.ccl_bucket}"
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -80,7 +83,7 @@ functions:
 
 resources:
   Resources:
-    users:
+    usersTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: users
@@ -93,7 +96,7 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    scores:
+    scoresTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: scores
