@@ -80,6 +80,14 @@ functions:
         - http:
             path: score/minus
             method: post
+  top:
+    handler: lib/score/score.top
+    name: ${self:provider.stage}-score-top
+    description: Get top scorers
+    events:
+        - http:
+            path: score/top
+            method: post
 
 resources:
   Resources:
@@ -88,14 +96,34 @@ resources:
       Properties:
         TableName: users
         AttributeDefinitions:
+          - AttributeName: team_id
+            AttributeType: S
           - AttributeName: name
             AttributeType: S
+          - AttributeName: score
+            AttributeType: N
         KeySchema:
-          - AttributeName: name
+          - AttributeName: team_id
             KeyType: HASH
+          - AttributeName: name
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+        LocalSecondaryIndexes:
+          - IndexName : users-team-score
+            KeySchema:
+              - AttributeName: team_id
+                KeyType: HASH
+              - AttributeName: score
+                KeyType: RANGE
+            Projection:
+              NonKeyAttributes:
+               - "karma"
+               - "id"
+               - "name"
+              ProjectionType: INCLUDE
+
     scoresTable:
       Type: AWS::DynamoDB::Table
       Properties:
