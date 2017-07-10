@@ -10,6 +10,7 @@
   ],
   "dependencies": {
     "aws-sdk": "^2.75.0",
+    "js-yaml": "^3.9.0",
     "lodash": "^4.17.4",
     "serverless-dynamodb-client": "0.0.2",
     "unirest": "^0.5.1",

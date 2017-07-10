@@ -6,6 +6,7 @@ package:
   include:
     - lib/**
     - data/**
+    - conf/**
     - node_modules/serverless-dynamodb-local/**
 
   exclude:
@@ -17,6 +18,9 @@ custom:
   creds: ${file(./config.yml)}
   bucket: chee
   ccl_bucket: tds-slack
+  tables:
+    users: karma_users
+    scores: karma_scores
   dynamodb:
     start:
       inMemory: true
@@ -36,8 +40,8 @@ provider:
     SLACK_CLIENT_SECRET: ${self:custom.creds.slack_client_secret}
     SLACK_VERIFICATION_TOKEN: ${self:custom.creds.slack_verification_token}
     MASHAPE_API_KEY: ${self:custom.creds.mashape_api_key}
-    DYNAMODB_USER_TABLE: users
-    DYNAMODB_SCORE_TABLE: scores
+    DYNAMODB_USER_TABLE: ${self:custom.tables.users}
+    DYNAMODB_SCORE_TABLE: ${self:custom.tables.scores}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -94,13 +98,15 @@ resources:
     usersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: users
+        TableName: ${self:custom.tables.users}
         AttributeDefinitions:
           - AttributeName: team_id
             AttributeType: S
           - AttributeName: name
             AttributeType: S
           - AttributeName: score
+            AttributeType: N
+          - AttributeName: karma
             AttributeType: N
         KeySchema:
           - AttributeName: team_id
@@ -123,11 +129,23 @@ resources:
                - "id"
                - "name"
               ProjectionType: INCLUDE
+          - IndexName : users-team-karma
+            KeySchema:
+              - AttributeName: team_id
+                KeyType: HASH
+              - AttributeName: karma
+                KeyType: RANGE
+            Projection:
+              NonKeyAttributes:
+               - "score"
+               - "id"
+               - "name"
+              ProjectionType: INCLUDE
 
     scoresTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: scores
+        TableName: ${self:custom.tables.scores}
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
